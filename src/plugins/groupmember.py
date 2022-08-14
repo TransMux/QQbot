@@ -30,6 +30,7 @@ async def handle_city(event: Union[PrivateMessageEvent, GroupMessageEvent], city
 
 async def get_members(group_id: str) -> Path:
     members = await api.get_group_member_list(group_id)
+    members = [m.dict() for m in members]
     members_df = pd.DataFrame(members)
     # group_id date member_list
     date = time.strftime("%Y-%m-%d", time.localtime())
