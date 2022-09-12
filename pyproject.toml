@@ -15,7 +15,7 @@ openpyxl = "^3.0.10"
 nb-cli = "^0.6.0"
 
 [tool.nonebot]
-plugins = ["nonebot_plugin_status", "nonebot_plugin_gocqhttp"]
+plugins = ["nonebot_plugin_status", "nonebot_plugin_gocqhttp", "nonebot_plugin_apscheduler"]
 plugin_dirs = ["src/plugins"]
 
 [build-system]
