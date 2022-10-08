@@ -38,15 +38,45 @@ async def handle_city(class_id: str = ArgPlainText("class_id")):
 
     await report_raw_table.finish(report)
 
+# 核酸填报详细完成名单
+
+report_raw_table_finish = on_command("核酸填报详细完成名单", priority=5)
+
+
+@report_raw_table_finish.handle()
+async def handle_first_receive(matcher: Matcher, args: Message = CommandArg()):
+    plain_text = args.extract_plain_text()  # 首次发送命令时跟随的参数，例：/天气 上海，则args为上海
+    if plain_text:
+        matcher.set_arg("class_id", args)  # 如果用户发送了参数则直接赋值
+
+
+@report_raw_table_finish.got("class_id", prompt="您需要查询哪个班？")
+async def handle_city(class_id: str = ArgPlainText("class_id")):
+    data = get_sheet_data()
+    data = data[data["填报状态"] == "已填报"]
+    report = "已填报同学名单：\n\n"
+    for current_class, class_data in data.groupby("班级"):
+        if (class_id in current_class) or class_id == "全部":
+            report += f"{current_class}：\n"
+            for name in class_data["姓名"]:
+                report += f"    {name}\n"
+    print(report)
+
+    await report_raw_table_finish.finish(report)
+
 
 async def send_all_scheduled():
     data = get_sheet_data()
     data = data[data["填报状态"] == "未填报"]
-    report = "核酸未填报同学：\n\n"
+    if data.shape[0] == 0:
+        return
+
+    report = "核酸未填报同学：\n\n    "
     for current_class, class_data in data.groupby("班级"):
         report += f"{current_class}：\n"
         for name in class_data["姓名"]:
-            report += f"    {name}\n"
+            report += f"{name}，"
+    report.rstrip("，")
     print(report)
 
     await api.send_msg(report, user_id=1563881250)
@@ -55,12 +85,12 @@ async def send_all_scheduled():
     await api.send_msg(report, group_id=559735949)
     await api.send_msg(report, group_id=745109536)
 
-
-scheduler.add_job(send_all_scheduled, "cron", hour=11, minute=45, second=0)
-
-scheduler.add_job(send_all_scheduled, "cron", hour=11, minute=55, second=0)
-
-scheduler.add_job(send_all_scheduled, "cron", hour=12, minute=5, second=0)
+#
+# scheduler.add_job(send_all_scheduled, "cron", hour=11, minute=45, second=0)
+#
+# scheduler.add_job(send_all_scheduled, "cron", hour=11, minute=55, second=0)
+#
+# scheduler.add_job(send_all_scheduled, "cron", hour=12, minute=5, second=0)
 
 
 # 核酸填报情况汇总
@@ -94,11 +124,11 @@ async def report_scheduled():
     await api.send_msg(report, user_id=2294227991)
 
 
-scheduler.add_job(report_scheduled, "cron", hour=11, minute=50, second=0)
-
-scheduler.add_job(report_scheduled, "cron", hour=12, minute=0, second=0)
-
-scheduler.add_job(report_scheduled, "cron", hour=12, minute=10, second=0)
+# scheduler.add_job(report_scheduled, "cron", hour=11, minute=50, second=0)
+#
+# scheduler.add_job(report_scheduled, "cron", hour=12, minute=0, second=0)
+#
+# scheduler.add_job(report_scheduled, "cron", hour=12, minute=10, second=0)
 
 # 核酸填报表
 
